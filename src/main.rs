@@ -1,17 +1,26 @@
+mod camera;
 mod hitable;
 mod ray;
 mod vec3;
 
+use camera::Camera;
 use hitable::{Hitable, Sphere, World};
 use minifb::{Key, Window, WindowOptions};
+use rand::prelude::*;
 use ray::Ray;
 use vec3::Vec3;
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 320;
+const NUM_SAMPLES: i32 = 32;
+
+fn random_in_unit_sphere() -> Vec3 {
+    // TODO random numbers :/
+    Vec3::new(1.0, 0.0, 0.0)
+}
 
 fn color(r: &Ray, world: &World) -> Vec3 {
-    // TODO: how to get max float??
+    // TODO: how to get max float in rust??
     if let Some(hit) = world.hit(&r, 0.0, 10000.0) {
         Vec3::new(
             0.5 * (hit.n.x + 1.0),
@@ -35,6 +44,7 @@ fn to_buffer_index(i: usize, j: usize, width: usize, height: usize) -> usize {
 }
 
 fn main() {
+    println!("starting raytracing now!");
     let mut window = Window::new(
         "Raytracer - ESC to exit",
         WIDTH,
@@ -44,28 +54,6 @@ fn main() {
     .unwrap_or_else(|e| {
         panic!("{}", e);
     });
-
-    //640 by 320
-    let lower_left_corner = Vec3 {
-        x: -1.6,
-        y: -0.8,
-        z: -1.0,
-    };
-    let horizontal = Vec3 {
-        x: 3.2,
-        y: 0.0,
-        z: 0.0,
-    };
-    let vertical = Vec3 {
-        x: 0.0,
-        y: 1.6,
-        z: 0.0,
-    };
-    let origin = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
 
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
@@ -77,12 +65,27 @@ fn main() {
 
     let world = World::new(spheres);
 
+    // 640 by 320
+    let camera = Camera::new(
+        Vec3::new(0.0, 0.0, 0.0),    // eye
+        Vec3::new(-1.6, -0.8, -1.0), // lower left corner
+        Vec3::new(3.2, 0.0, 0.0),    // horizontal
+        Vec3::new(0.0, 1.6, 0.0),    // vertical
+    );
+
+    let mut rng = rand::thread_rng();
+
     for j in 0..WIDTH {
         for i in 0..HEIGHT {
-            let u = (j as f32) / (WIDTH as f32);
-            let v = (i as f32) / (HEIGHT as f32);
-            let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical);
-            let c = color(&r, &world);
+            // TODO: add some actual random noise to the samples...
+            let mut c = Vec3::new(0.0, 0.0, 0.0);
+            for _ in 0..NUM_SAMPLES {
+                let u = ((j as f32) + rng.gen::<f32>()) / (WIDTH as f32);
+                let v = ((i as f32) + rng.gen::<f32>()) / (HEIGHT as f32);
+                let r = camera.make_ray(u, v);
+                c += color(&r, &world);
+            }
+            c = (1.0 / NUM_SAMPLES as f32) * c;
 
             let ir = (255.99 * c.x) as u32;
             let ig = (255.99 * c.y) as u32;

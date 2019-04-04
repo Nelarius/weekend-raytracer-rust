@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Vec3 {
@@ -51,6 +51,14 @@ impl Add for Vec3 {
             y: self.y + rhs.y,
             z: self.z + rhs.z,
         }
+    }
+}
+
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, rhs: Vec3) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
@@ -110,6 +118,21 @@ mod test {
                 x: 3.0,
                 y: 1.0,
                 z: 4.0
+            }
+        );
+    }
+
+    #[test]
+    fn add_assign() {
+        let mut x = Vec3::new(0.0, 0.0, 0.0);
+        let y = Vec3::new(1.0, 2.0, 3.0);
+        x += y;
+        assert_eq!(
+            x,
+            Vec3 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0
             }
         );
     }
