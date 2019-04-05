@@ -14,23 +14,24 @@ const WIDTH: usize = 640;
 const HEIGHT: usize = 320;
 const NUM_SAMPLES: i32 = 32;
 
-fn random_in_unit_sphere() -> Vec3 {
-    // TODO random numbers :/
-    Vec3::new(1.0, 0.0, 0.0)
+fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
+    loop {
+        let p = 2.0 * (Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(0.0, 0.0, 0.0));
+        if p.squared_length() >= 1.0 {
+            break p;
+        }
+    }
 }
 
-fn color(r: &Ray, world: &World) -> Vec3 {
+fn color(r: Ray, world: &World, mut rng: &mut ThreadRng) -> Vec3 {
     // TODO: how to get max float in rust??
     if let Some(hit) = world.hit(&r, 0.0, 10000.0) {
-        Vec3::new(
-            0.5 * (hit.n.x + 1.0),
-            0.5 * (hit.n.y + 1.0),
-            0.5 * (hit.n.z + 1.0),
-        )
+        let target = hit.p + hit.n + random_in_unit_sphere(&mut rng);
+        return 0.5 * color(Ray::new(hit.p, target - hit.p), &world, &mut rng);
     } else {
         let unit_direction = r.direction.make_unit_vector();
         let t = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
+        return (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0);
     }
 }
 
@@ -83,13 +84,13 @@ fn main() {
                 let u = ((j as f32) + rng.gen::<f32>()) / (WIDTH as f32);
                 let v = ((i as f32) + rng.gen::<f32>()) / (HEIGHT as f32);
                 let r = camera.make_ray(u, v);
-                c += color(&r, &world);
+                c += color(r, &world, &mut rng);
             }
             c = (1.0 / NUM_SAMPLES as f32) * c;
 
-            let ir = (255.99 * c.x) as u32;
-            let ig = (255.99 * c.y) as u32;
-            let ib = (255.99 * c.z) as u32;
+            let ir = (255.99 * c.x.sqrt()) as u32;
+            let ig = (255.99 * c.y.sqrt()) as u32;
+            let ib = (255.99 * c.z.sqrt()) as u32;
 
             buffer[to_buffer_index(i, j, WIDTH, HEIGHT)] = to_bgra(ir, ig, ib);
         }
