@@ -80,6 +80,7 @@ fn main() {
             0.5,
             MaterialRecord::Metal(Metal {
                 albedo: Vec3::new(0.8, 0.6, 0.2),
+                fuzz: 0.1,
             }),
         ),
         Sphere::new(
@@ -87,6 +88,7 @@ fn main() {
             0.5,
             MaterialRecord::Metal(Metal {
                 albedo: Vec3::new(0.8, 0.8, 0.8),
+                fuzz: 1.0,
             }),
         ),
     ];
