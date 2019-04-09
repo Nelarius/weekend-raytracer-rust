@@ -1,3 +1,4 @@
+use rand::random;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -40,6 +41,23 @@ impl Vec3 {
             z: self.z * inv_n,
         }
     }
+
+    pub fn reflect(&self, n: Vec3) -> Vec3 {
+        *self - 2.0 * self.dot(n) * n
+    }
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        // TODO: since we're using random() in a loop, caching rng should
+        // increase performace
+        let p = 2.0
+            * (Vec3::new(random::<f32>(), random::<f32>(), random::<f32>())
+                - Vec3::new(0.0, 0.0, 0.0));
+        if p.squared_length() >= 1.0 {
+            break p;
+        }
+    }
 }
 
 impl Add for Vec3 {
@@ -70,6 +88,18 @@ impl Mul<Vec3> for f32 {
             x: self * rhs.x,
             y: self * rhs.y,
             z: self * rhs.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
         }
     }
 }
@@ -221,6 +251,13 @@ mod test {
                 z: 9.0
             }
         );
+    }
+
+    #[test]
+    fn hadamard() {
+        let lhs = Vec3::new(1.0, 1.0, 1.0);
+        let rhs = Vec3::new(2.0, 3.0, 4.0);
+        assert_eq!(lhs * rhs, Vec3::new(2.0, 3.0, 4.0));
     }
 
     #[test]

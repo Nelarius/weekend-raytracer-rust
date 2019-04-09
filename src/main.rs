@@ -1,10 +1,12 @@
 mod camera;
 mod hitable;
+mod material;
 mod ray;
 mod vec3;
 
 use camera::Camera;
-use hitable::{Hitable, Sphere, World};
+use hitable::{Hitable, MaterialRecord, Sphere, World};
+use material::{Lambertian, Material, Metal};
 use minifb::{Key, Window, WindowOptions};
 use rand::prelude::*;
 use ray::Ray;
@@ -13,21 +15,20 @@ use vec3::Vec3;
 const WIDTH: usize = 640;
 const HEIGHT: usize = 320;
 const NUM_SAMPLES: i32 = 32;
+const MAX_DEPTH: i32 = 50;
 
-fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
-    loop {
-        let p = 2.0 * (Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(0.0, 0.0, 0.0));
-        if p.squared_length() >= 1.0 {
-            break p;
-        }
-    }
-}
-
-fn color(r: Ray, world: &World, mut rng: &mut ThreadRng) -> Vec3 {
+fn color(r: Ray, world: &World, depth: i32) -> Vec3 {
     // TODO: how to get max float in rust??
-    if let Some(hit) = world.hit(&r, 0.0, 10000.0) {
-        let target = hit.p + hit.n + random_in_unit_sphere(&mut rng);
-        return 0.5 * color(Ray::new(hit.p, target - hit.p), &world, &mut rng);
+    if let Some(hit) = world.hit(&r, 0.001, 10000.0) {
+        if depth < MAX_DEPTH {
+            let scatter = match hit.material {
+                MaterialRecord::Lambertian(l) => l.scatter(&r, &hit),
+                MaterialRecord::Metal(m) => m.scatter(&r, &hit),
+            };
+            return scatter.attenuation * color(scatter.ray, &world, depth + 1);
+        } else {
+            return Vec3::new(0.0, 0.0, 0.0);
+        }
     } else {
         let unit_direction = r.direction.make_unit_vector();
         let t = 0.5 * (unit_direction.y + 1.0);
@@ -60,8 +61,34 @@ fn main() {
 
     // list of spheres
     let spheres = vec![
-        Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5),
-        Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0),
+        Sphere::new(
+            Vec3::new(0.0, 0.0, -1.0),
+            0.5,
+            MaterialRecord::Lambertian(Lambertian {
+                albedo: Vec3::new(0.8, 0.3, 0.3),
+            }),
+        ),
+        Sphere::new(
+            Vec3::new(0.0, -100.5, -1.0),
+            100.0,
+            MaterialRecord::Lambertian(Lambertian {
+                albedo: Vec3::new(0.8, 0.8, 0.0),
+            }),
+        ),
+        Sphere::new(
+            Vec3::new(1.0, 0.0, -1.0),
+            0.5,
+            MaterialRecord::Metal(Metal {
+                albedo: Vec3::new(0.8, 0.6, 0.2),
+            }),
+        ),
+        Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            0.5,
+            MaterialRecord::Metal(Metal {
+                albedo: Vec3::new(0.8, 0.8, 0.8),
+            }),
+        ),
     ];
 
     let world = World::new(spheres);
@@ -84,10 +111,12 @@ fn main() {
                 let u = ((j as f32) + rng.gen::<f32>()) / (WIDTH as f32);
                 let v = ((i as f32) + rng.gen::<f32>()) / (HEIGHT as f32);
                 let r = camera.make_ray(u, v);
-                c += color(r, &world, &mut rng);
+                c += color(r, &world, 0);
             }
             c = (1.0 / NUM_SAMPLES as f32) * c;
 
+            // uses gamma corrected color values
+            // gamma correction uses factor 1/2
             let ir = (255.99 * c.x.sqrt()) as u32;
             let ig = (255.99 * c.y.sqrt()) as u32;
             let ib = (255.99 * c.z.sqrt()) as u32;

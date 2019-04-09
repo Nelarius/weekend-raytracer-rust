@@ -1,10 +1,21 @@
-use crate::{ray::Ray, vec3::Vec3};
+use crate::{
+    material::{Lambertian, Metal},
+    ray::Ray,
+    vec3::Vec3,
+};
+
+#[derive(Copy, Clone)]
+pub enum MaterialRecord {
+    Lambertian(Lambertian),
+    Metal(Metal),
+}
 
 #[derive(Copy, Clone)]
 pub struct HitRecord {
     pub t: f32,
     pub p: Vec3,
     pub n: Vec3,
+    pub material: MaterialRecord,
 }
 
 pub trait Hitable {
@@ -15,11 +26,16 @@ pub trait Hitable {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
+    pub material: MaterialRecord,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32) -> Sphere {
-        Sphere { center, radius }
+    pub fn new(center: Vec3, radius: f32, material: MaterialRecord) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -40,6 +56,7 @@ impl Hitable for Sphere {
                     t: temp,
                     p: hit_point,
                     n: (1.0 / self.radius) * (hit_point - self.center),
+                    material: self.material,
                 });
             }
 
@@ -50,6 +67,7 @@ impl Hitable for Sphere {
                     t: temp,
                     p: hit_point,
                     n: (1.0 / self.radius) * (hit_point - self.center),
+                    material: self.material,
                 });
             }
         }
