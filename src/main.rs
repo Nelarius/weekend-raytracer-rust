@@ -6,7 +6,7 @@ mod vec3;
 
 use camera::Camera;
 use hitable::{Hitable, MaterialRecord, Sphere, World};
-use material::{Lambertian, Material, Metal};
+use material::{Dielectric, Lambertian, Material, Metal};
 use minifb::{Key, Window, WindowOptions};
 use rand::prelude::*;
 use ray::Ray;
@@ -22,10 +22,15 @@ fn color(r: Ray, world: &World, depth: i32) -> Vec3 {
     if let Some(hit) = world.hit(&r, 0.001, 10000.0) {
         if depth < MAX_DEPTH {
             let scatter = match hit.material {
+                MaterialRecord::Dielectric(d) => d.scatter(&r, &hit),
                 MaterialRecord::Lambertian(l) => l.scatter(&r, &hit),
                 MaterialRecord::Metal(m) => m.scatter(&r, &hit),
             };
-            return scatter.attenuation * color(scatter.ray, &world, depth + 1);
+            return if let Some(s) = scatter {
+                s.attenuation * color(s.ray, &world, depth + 1)
+            } else {
+                Vec3::new(0.0, 0.0, 0.0)
+            };
         } else {
             return Vec3::new(0.0, 0.0, 0.0);
         }
@@ -78,9 +83,8 @@ fn main() {
         Sphere::new(
             Vec3::new(1.0, 0.0, -1.0),
             0.5,
-            MaterialRecord::Metal(Metal {
-                albedo: Vec3::new(0.8, 0.6, 0.2),
-                fuzz: 0.1,
+            MaterialRecord::Dielectric(Dielectric {
+                refraction_index: 1.5,
             }),
         ),
         Sphere::new(

@@ -1,11 +1,12 @@
 use crate::{
-    material::{Lambertian, Metal},
+    material::{Dielectric, Lambertian, Metal},
     ray::Ray,
     vec3::Vec3,
 };
 
 #[derive(Copy, Clone)]
 pub enum MaterialRecord {
+    Dielectric(Dielectric),
     Lambertian(Lambertian),
     Metal(Metal),
 }
