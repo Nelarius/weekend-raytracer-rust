@@ -18,8 +18,7 @@ const NUM_SAMPLES: i32 = 32;
 const MAX_DEPTH: i32 = 50;
 
 fn color(r: Ray, world: &World, depth: i32) -> Vec3 {
-    // TODO: how to get max float in rust??
-    if let Some(hit) = world.hit(&r, 0.001, 10000.0) {
+    if let Some(hit) = world.hit(&r, 0.001, std::f32::MAX) {
         if depth < MAX_DEPTH {
             let scatter = match hit.material {
                 MaterialRecord::Dielectric(d) => d.scatter(&r, &hit),
@@ -70,7 +69,7 @@ fn main() {
             Vec3::new(0.0, 0.0, -1.0),
             0.5,
             MaterialRecord::Lambertian(Lambertian {
-                albedo: Vec3::new(0.8, 0.3, 0.3),
+                albedo: Vec3::new(0.1, 0.2, 0.6),
             }),
         ),
         Sphere::new(
@@ -83,35 +82,43 @@ fn main() {
         Sphere::new(
             Vec3::new(1.0, 0.0, -1.0),
             0.5,
+            MaterialRecord::Metal(Metal {
+                albedo: Vec3::new(0.8, 0.6, 0.2),
+                fuzz: 0.2,
+            }),
+        ),
+        Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            0.5,
             MaterialRecord::Dielectric(Dielectric {
                 refraction_index: 1.5,
             }),
         ),
         Sphere::new(
             Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            MaterialRecord::Metal(Metal {
-                albedo: Vec3::new(0.8, 0.8, 0.8),
-                fuzz: 1.0,
+            -0.45,
+            MaterialRecord::Dielectric(Dielectric {
+                refraction_index: 1.5,
             }),
         ),
     ];
 
-    let world = World::new(spheres);
-
-    // 640 by 320
+    let aspect_ratio = (WIDTH as f32) / (HEIGHT as f32);
+    // let camera = Camera::new(90.0, aspect_ratio);
     let camera = Camera::new(
-        Vec3::new(0.0, 0.0, 0.0),    // eye
-        Vec3::new(-1.6, -0.8, -1.0), // lower left corner
-        Vec3::new(3.2, 0.0, 0.0),    // horizontal
-        Vec3::new(0.0, 1.6, 0.0),    // vertical
+        Vec3::new(-2.0, 2.0, 1.0), // lookfrom
+        Vec3::new(0.0, 0.0, -1.0), // lookat
+        Vec3::new(0.0, 1.0, 0.0),  // vup
+        30.0,                      // vfov
+        aspect_ratio,              // aspect ratio
     );
+
+    let world = World::new(spheres);
 
     let mut rng = rand::thread_rng();
 
     for j in 0..WIDTH {
         for i in 0..HEIGHT {
-            // TODO: add some actual random noise to the samples...
             let mut c = Vec3::new(0.0, 0.0, 0.0);
             for _ in 0..NUM_SAMPLES {
                 let u = ((j as f32) + rng.gen::<f32>()) / (WIDTH as f32);
