@@ -51,10 +51,9 @@ pub fn random_in_unit_sphere() -> Vec3 {
     loop {
         // TODO: since we're using random() in a loop, caching rng should
         // increase performace
-        let p = 2.0
-            * (Vec3::new(random::<f32>(), random::<f32>(), random::<f32>())
-                - Vec3::new(0.0, 0.0, 0.0));
-        if p.squared_length() >= 1.0 {
+        let p = 2.0 * Vec3::new(random::<f32>(), random::<f32>(), random::<f32>())
+            - Vec3::new(1.0, 1.0, 1.0);
+        if p.squared_length() < 1.0 {
             break p;
         }
     }
