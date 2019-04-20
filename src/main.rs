@@ -96,21 +96,25 @@ fn main() {
         ),
         Sphere::new(
             Vec3::new(-1.0, 0.0, -1.0),
-            -0.45,
+            -0.48,
             MaterialRecord::Dielectric(Dielectric {
                 refraction_index: 1.5,
             }),
         ),
     ];
 
+    let lookfrom = Vec3::new(-2.0, 1.0, 1.0);
+    let lookat = Vec3::new(0.0, 0.0, -1.0);
     let aspect_ratio = (WIDTH as f32) / (HEIGHT as f32);
     // let camera = Camera::new(90.0, aspect_ratio);
     let camera = Camera::new(
-        Vec3::new(-2.0, 2.0, 1.0), // lookfrom
-        Vec3::new(0.0, 0.0, -1.0), // lookat
-        Vec3::new(0.0, 1.0, 0.0),  // vup
-        30.0,                      // vfov
-        aspect_ratio,              // aspect ratio
+        lookfrom,
+        lookat,
+        Vec3::new(0.0, 1.0, 0.0),     // vup
+        30.0,                         // vfov
+        aspect_ratio,                 // aspect ratio
+        1.0,                          // aperture
+        (lookfrom - lookat).length(), // focust distance
     );
 
     let world = World::new(spheres);
