@@ -5,7 +5,7 @@ mod ray;
 mod vec3;
 
 use camera::Camera;
-use hitable::{Hitable, MaterialRecord, Sphere, World};
+use hitable::{Hitable, Sphere, World};
 use material::{Dielectric, Lambertian, Material, Metal};
 use minifb::{Key, Window, WindowOptions};
 use rand::prelude::*;
@@ -14,16 +14,16 @@ use vec3::Vec3;
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 320;
-const NUM_SAMPLES: i32 = 32;
+const NUM_SAMPLES: i32 = 1;
 const MAX_DEPTH: i32 = 50;
 
 fn color(r: Ray, world: &World, depth: i32) -> Vec3 {
     if let Some(hit) = world.hit(&r, 0.001, std::f32::MAX) {
         if depth < MAX_DEPTH {
             let scatter = match hit.material {
-                MaterialRecord::Dielectric(d) => d.scatter(&r, &hit),
-                MaterialRecord::Lambertian(l) => l.scatter(&r, &hit),
-                MaterialRecord::Metal(m) => m.scatter(&r, &hit),
+                Material::Dielectric(d) => d.scatter(&r, &hit),
+                Material::Lambertian(l) => l.scatter(&r, &hit),
+                Material::Metal(m) => m.scatter(&r, &hit),
             };
             return if let Some(s) = scatter {
                 s.attenuation * color(s.ray, &world, depth + 1)
@@ -68,28 +68,28 @@ fn main() {
         Sphere::new(
             Vec3::new(0.0, -1000.0, -1.0),
             1000.0,
-            MaterialRecord::Lambertian(Lambertian {
+            Material::Lambertian(Lambertian {
                 albedo: Vec3::new(0.5, 0.5, 0.5),
             }),
         ),
         Sphere::new(
             Vec3::new(0.0, 1.0, 0.0),
             1.0,
-            MaterialRecord::Dielectric(Dielectric {
+            Material::Dielectric(Dielectric {
                 refraction_index: 1.5,
             }),
         ),
         Sphere::new(
             Vec3::new(-4.0, 1.0, 0.0),
             1.0,
-            MaterialRecord::Lambertian(Lambertian {
+            Material::Lambertian(Lambertian {
                 albedo: Vec3::new(0.4, 0.2, 0.1),
             }),
         ),
         Sphere::new(
             Vec3::new(4.0, 1.0, 0.0),
             1.0,
-            MaterialRecord::Metal(Metal {
+            Material::Metal(Metal {
                 albedo: Vec3::new(0.7, 0.6, 0.5),
                 fuzz: 0.0,
             }),
@@ -109,7 +109,7 @@ fn main() {
                     spheres.push(Sphere::new(
                         center,
                         0.2,
-                        MaterialRecord::Lambertian(Lambertian {
+                        Material::Lambertian(Lambertian {
                             albedo: Vec3::new(
                                 random::<f32>() * random::<f32>(),
                                 random::<f32>() * random::<f32>(),
@@ -122,7 +122,7 @@ fn main() {
                     spheres.push(Sphere::new(
                         center,
                         0.2,
-                        MaterialRecord::Metal(Metal {
+                        Material::Metal(Metal {
                             albedo: Vec3::new(
                                 random::<f32>() * random::<f32>(),
                                 random::<f32>() * random::<f32>(),
@@ -135,7 +135,7 @@ fn main() {
                     spheres.push(Sphere::new(
                         center,
                         0.2,
-                        MaterialRecord::Dielectric(Dielectric {
+                        Material::Dielectric(Dielectric {
                             refraction_index: 1.5,
                         }),
                     ));
@@ -147,7 +147,7 @@ fn main() {
     let lookfrom = Vec3::new(16.0, 2.0, 4.0);
     let lookat = Vec3::new(0.0, 0.0, 0.0);
     let aspect_ratio = (WIDTH as f32) / (HEIGHT as f32);
-    // let camera = Camera::new(90.0, aspect_ratio);
+
     let camera = Camera::new(
         lookfrom,
         lookat,

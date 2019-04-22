@@ -1,22 +1,11 @@
-use crate::{
-    material::{Dielectric, Lambertian, Metal},
-    ray::Ray,
-    vec3::Vec3,
-};
+use crate::{material::Material, ray::Ray, vec3::Vec3};
 
 #[derive(Copy, Clone)]
-pub enum MaterialRecord {
-    Dielectric(Dielectric),
-    Lambertian(Lambertian),
-    Metal(Metal),
-}
-
-#[derive(Copy, Clone)]
-pub struct HitRecord {
+pub struct HitRecord<'obj> {
     pub t: f32,
     pub p: Vec3,
     pub n: Vec3,
-    pub material: MaterialRecord,
+    pub material: &'obj Material,
 }
 
 pub trait Hitable {
@@ -27,11 +16,11 @@ pub trait Hitable {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub material: MaterialRecord,
+    pub material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: MaterialRecord) -> Sphere {
+    pub fn new(center: Vec3, radius: f32, material: Material) -> Sphere {
         Sphere {
             center,
             radius,
@@ -57,7 +46,7 @@ impl Hitable for Sphere {
                     t: temp,
                     p: hit_point,
                     n: (1.0 / self.radius) * (hit_point - self.center),
-                    material: self.material,
+                    material: &self.material,
                 });
             }
 
@@ -68,7 +57,7 @@ impl Hitable for Sphere {
                     t: temp,
                     p: hit_point,
                     n: (1.0 / self.radius) * (hit_point - self.center),
-                    material: self.material,
+                    material: &self.material,
                 });
             }
         }

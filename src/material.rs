@@ -17,17 +17,13 @@ impl Scatter {
     }
 }
 
-pub trait Material {
-    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<Scatter>;
-}
-
 #[derive(Copy, Clone)]
 pub struct Lambertian {
     pub albedo: Vec3,
 }
 
-impl Material for Lambertian {
-    fn scatter(&self, _: &Ray, hit: &HitRecord) -> Option<Scatter> {
+impl Lambertian {
+    pub fn scatter(&self, _: &Ray, hit: &HitRecord) -> Option<Scatter> {
         let target = hit.p + hit.n + random_in_unit_sphere();
         let attenuation = self.albedo;
         let scattered_ray = Ray::new(hit.p, target - hit.p);
@@ -41,8 +37,8 @@ pub struct Metal {
     pub fuzz: f32,
 }
 
-impl Material for Metal {
-    fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
+impl Metal {
+    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
         let reflected = ray.direction.reflect(hit.n);
         let attenuation = self.albedo;
         let scattered = Ray::new(hit.p, reflected + self.fuzz * random_in_unit_sphere());
@@ -75,8 +71,8 @@ fn schlick(cosine: f32, refraction_index: f32) -> f32 {
     r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
 }
 
-impl Material for Dielectric {
-    fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
+impl Dielectric {
+    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
         // if the ray direction and hit normal are in the same half-sphere
         let (outward_normal, ni_over_nt, cosine) = if ray.direction.dot(hit.n) > 0.0 {
             (
@@ -110,4 +106,11 @@ impl Material for Dielectric {
             ))
         }
     }
+}
+
+#[derive(Copy, Clone)]
+pub enum Material {
+    Dielectric(Dielectric),
+    Lambertian(Lambertian),
+    Metal(Metal),
 }
