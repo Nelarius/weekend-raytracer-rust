@@ -89,8 +89,8 @@ impl Dielectric {
         };
 
         if let Some(refracted) = refract(ray.direction, outward_normal, ni_over_nt) {
-            let refraction_prob = schlick(cosine, self.refraction_index);
-            let out_dir = if random::<f32>() < refraction_prob {
+            let reflection_prob = schlick(cosine, self.refraction_index);
+            let out_dir = if random::<f32>() < reflection_prob {
                 ray.direction.reflect(hit.n)
             } else {
                 refracted
