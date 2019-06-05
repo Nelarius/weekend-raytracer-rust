@@ -6,7 +6,7 @@ mod vec3;
 
 use camera::Camera;
 use hitable::{Hitable, Sphere, World};
-use material::{Dielectric, Lambertian, Material, Metal};
+use material::Material;
 use minifb::{Key, Window, WindowOptions};
 use rand::prelude::*;
 use ray::Ray;
@@ -64,31 +64,18 @@ fn main() {
         Sphere::new(
             Vec3::new(0.0, -1000.0, -1.0),
             1000.0,
-            Material::Lambertian(Lambertian {
-                albedo: Vec3::new(0.5, 0.5, 0.5),
-            }),
+            Material::lambertian(Vec3::new(0.5, 0.5, 0.5)),
         ),
-        Sphere::new(
-            Vec3::new(0.0, 1.0, 0.0),
-            1.0,
-            Material::Dielectric(Dielectric {
-                refraction_index: 1.5,
-            }),
-        ),
+        Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, Material::dielectric(1.5)),
         Sphere::new(
             Vec3::new(-4.0, 1.0, 0.0),
             1.0,
-            Material::Lambertian(Lambertian {
-                albedo: Vec3::new(0.4, 0.2, 0.1),
-            }),
+            Material::lambertian(Vec3::new(0.4, 0.2, 0.1)),
         ),
         Sphere::new(
             Vec3::new(4.0, 1.0, 0.0),
             1.0,
-            Material::Metal(Metal {
-                albedo: Vec3::new(0.7, 0.6, 0.5),
-                fuzz: 0.0,
-            }),
+            Material::metal(Vec3::new(0.7, 0.6, 0.5), 0.0),
         ),
     ];
 
@@ -105,36 +92,28 @@ fn main() {
                     spheres.push(Sphere::new(
                         center,
                         0.2,
-                        Material::Lambertian(Lambertian {
-                            albedo: Vec3::new(
-                                random::<f32>() * random::<f32>(),
-                                random::<f32>() * random::<f32>(),
-                                random::<f32>() * random::<f32>(),
-                            ),
-                        }),
+                        Material::lambertian(Vec3::new(
+                            random::<f32>() * random::<f32>(),
+                            random::<f32>() * random::<f32>(),
+                            random::<f32>() * random::<f32>(),
+                        )),
                     ));
                 } else if choose_mat < 0.95 {
                     // metal
                     spheres.push(Sphere::new(
                         center,
                         0.2,
-                        Material::Metal(Metal {
-                            albedo: Vec3::new(
+                        Material::metal(
+                            Vec3::new(
                                 random::<f32>() * random::<f32>(),
                                 random::<f32>() * random::<f32>(),
                                 random::<f32>() * random::<f32>(),
                             ),
-                            fuzz: 0.5 * random::<f32>(),
-                        }),
+                            0.5 * random::<f32>(),
+                        ),
                     ))
                 } else {
-                    spheres.push(Sphere::new(
-                        center,
-                        0.2,
-                        Material::Dielectric(Dielectric {
-                            refraction_index: 1.5,
-                        }),
-                    ));
+                    spheres.push(Sphere::new(center, 0.2, Material::dielectric(1.5)));
                 }
             }
         }

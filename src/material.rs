@@ -111,3 +111,17 @@ pub enum Material {
     Lambertian(Lambertian),
     Metal(Metal),
 }
+
+impl Material {
+    pub fn lambertian(albedo: Vec3) -> Material {
+        Material::Lambertian(Lambertian { albedo })
+    }
+
+    pub fn metal(albedo: Vec3, fuzz: f32) -> Material {
+        Material::Metal(Metal { albedo, fuzz })
+    }
+
+    pub fn dielectric(refraction_index: f32) -> Material {
+        return Material::Dielectric(Dielectric { refraction_index });
+    }
+}
