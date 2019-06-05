@@ -25,11 +25,7 @@ fn color(r: Ray, world: &World, depth: i32) -> Vec3 {
                 Material::Lambertian(l) => l.scatter(&r, &hit),
                 Material::Metal(m) => m.scatter(&r, &hit),
             };
-            return if let Some(s) = scatter {
-                s.attenuation * color(s.ray, &world, depth + 1)
-            } else {
-                Vec3::new(0.0, 0.0, 0.0)
-            };
+            return scatter.attenuation * color(scatter.ray, &world, depth + 1);
         } else {
             return Vec3::new(0.0, 0.0, 0.0);
         }

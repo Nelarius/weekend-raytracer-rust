@@ -23,11 +23,11 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn scatter(&self, _: &Ray, hit: &HitRecord) -> Option<Scatter> {
+    pub fn scatter(&self, _: &Ray, hit: &HitRecord) -> Scatter {
         let target = hit.p + hit.n + random_in_unit_sphere();
         let attenuation = self.albedo;
         let scattered_ray = Ray::new(hit.p, target - hit.p);
-        Some(Scatter::new(attenuation, scattered_ray))
+        Scatter::new(attenuation, scattered_ray)
     }
 }
 
@@ -38,11 +38,11 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
+    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Scatter {
         let reflected = ray.direction.reflect(hit.n);
         let attenuation = self.albedo;
         let scattered = Ray::new(hit.p, reflected + self.fuzz * random_in_unit_sphere());
-        Some(Scatter::new(attenuation, scattered))
+        Scatter::new(attenuation, scattered)
     }
 }
 
@@ -72,7 +72,7 @@ fn schlick(cosine: f32, refraction_index: f32) -> f32 {
 }
 
 impl Dielectric {
-    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Option<Scatter> {
+    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Scatter {
         // if the ray direction and hit normal are in the same half-sphere
         let (outward_normal, ni_over_nt, cosine) = if ray.direction.dot(hit.n) > 0.0 {
             (
@@ -95,15 +95,12 @@ impl Dielectric {
             } else {
                 refracted
             };
-            Some(Scatter::new(
-                Vec3::new(1.0, 1.0, 1.0),
-                Ray::new(hit.p, out_dir),
-            ))
+            Scatter::new(Vec3::new(1.0, 1.0, 1.0), Ray::new(hit.p, out_dir))
         } else {
-            Some(Scatter::new(
+            Scatter::new(
                 Vec3::new(1.0, 1.0, 1.0),
                 Ray::new(hit.p, ray.direction.reflect(hit.n)),
-            ))
+            )
         }
     }
 }
