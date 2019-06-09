@@ -3,7 +3,7 @@ use crate::{
     ray::Ray,
     vec3::{random_in_unit_sphere, Vec3},
 };
-use rand::random;
+use rand::prelude::*;
 
 #[derive(Copy, Clone)]
 pub struct Scatter {
@@ -23,8 +23,8 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn scatter(&self, _: &Ray, hit: &HitRecord) -> Scatter {
-        let target = hit.p + hit.n + random_in_unit_sphere();
+    pub fn scatter(self, _: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+        let target = hit.p + hit.n + random_in_unit_sphere(rng);
         let attenuation = self.albedo;
         let scattered_ray = Ray::new(hit.p, target - hit.p);
         Scatter::new(attenuation, scattered_ray)
@@ -38,10 +38,10 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Scatter {
+    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
         let reflected = ray.direction.reflect(hit.n);
         let attenuation = self.albedo;
-        let scattered = Ray::new(hit.p, reflected + self.fuzz * random_in_unit_sphere());
+        let scattered = Ray::new(hit.p, reflected + self.fuzz * random_in_unit_sphere(rng));
         Scatter::new(attenuation, scattered)
     }
 }
@@ -72,7 +72,7 @@ fn schlick(cosine: f32, refraction_index: f32) -> f32 {
 }
 
 impl Dielectric {
-    pub fn scatter(&self, ray: &Ray, hit: &HitRecord) -> Scatter {
+    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
         // if the ray direction and hit normal are in the same half-sphere
         let (outward_normal, ni_over_nt, cosine) = if ray.direction.dot(hit.n) > 0.0 {
             (
@@ -90,17 +90,14 @@ impl Dielectric {
 
         if let Some(refracted) = refract(ray.direction, outward_normal, ni_over_nt) {
             let reflection_prob = schlick(cosine, self.refraction_index);
-            let out_dir = if random::<f32>() < reflection_prob {
+            let out_dir = if rng.gen::<f32>() < reflection_prob {
                 ray.direction.reflect(hit.n)
             } else {
                 refracted
             };
-            Scatter::new(Vec3::new(1.0, 1.0, 1.0), Ray::new(hit.p, out_dir))
+            Scatter::new(Vec3::ones(), Ray::new(hit.p, out_dir))
         } else {
-            Scatter::new(
-                Vec3::new(1.0, 1.0, 1.0),
-                Ray::new(hit.p, ray.direction.reflect(hit.n)),
-            )
+            Scatter::new(Vec3::ones(), Ray::new(hit.p, ray.direction.reflect(hit.n)))
         }
     }
 }

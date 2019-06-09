@@ -1,4 +1,4 @@
-use rand::random;
+use rand::prelude::*;
 use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -11,6 +11,22 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x, y, z }
+    }
+
+    pub fn ones() -> Vec3 {
+        Vec3 {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        }
+    }
+
+    pub fn zeros() -> Vec3 {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
     pub fn length(&self) -> f32 {
@@ -47,11 +63,11 @@ impl Vec3 {
     }
 }
 
-pub fn random_in_unit_sphere() -> Vec3 {
+pub fn random_in_unit_sphere(rng: &mut ThreadRng) -> Vec3 {
     loop {
         // TODO: since we're using random() in a loop, caching rng should
         // increase performace
-        let p = 2.0 * Vec3::new(random::<f32>(), random::<f32>(), random::<f32>())
+        let p = 2.0 * Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
             - Vec3::new(1.0, 1.0, 1.0);
         if p.squared_length() < 1.0 {
             break p;
@@ -59,11 +75,11 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-pub fn random_in_unit_disk() -> Vec3 {
+pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Vec3 {
     loop {
         let p = Vec3::new(
-            2.0 * random::<f32>() - 1.0,
-            2.0 * random::<f32>() - 1.0,
+            2.0 * rng.gen::<f32>() - 1.0,
+            2.0 * rng.gen::<f32>() - 1.0,
             0.0,
         );
         if p.squared_length() < 1.0 {

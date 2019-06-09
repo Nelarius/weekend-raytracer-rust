@@ -1,4 +1,5 @@
 use crate::{ray::Ray, vec3::random_in_unit_disk, vec3::Vec3};
+use rand::prelude::*;
 
 #[derive(Copy, Clone)]
 pub struct Camera {
@@ -48,8 +49,8 @@ impl Camera {
         }
     }
 
-    pub fn make_ray(&self, u: f32, v: f32) -> Ray {
-        let rd = self.lens_radius * random_in_unit_disk();
+    pub fn make_ray(&self, rng: &mut ThreadRng, u: f32, v: f32) -> Ray {
+        let rd = self.lens_radius * random_in_unit_disk(rng);
         let offset = rd.x * self.u + rd.y * self.v;
         let lens_pos = self.eye + offset;
         Ray::new(
