@@ -121,4 +121,12 @@ impl Material {
     pub fn dielectric(refraction_index: f32) -> Material {
         return Material::Dielectric(Dielectric { refraction_index });
     }
+
+    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+        match hit.material {
+            Material::Dielectric(d) => d.scatter(ray, hit, rng),
+            Material::Lambertian(l) => l.scatter(ray, hit, rng),
+            Material::Metal(m) => m.scatter(ray, hit, rng),
+        }
+    }
 }

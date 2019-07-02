@@ -1,6 +1,5 @@
 use crate::camera::Camera;
-use crate::hitable::{Hitable, World};
-use crate::material::Material;
+use crate::hitable::World;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use rand::prelude::*;
@@ -8,17 +7,13 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 const NUM_THREADS: usize = 16;
-const NUM_SAMPLES: u32 = 16;
+const NUM_SAMPLES: u32 = 32;
 const MAX_DEPTH: u32 = 8;
 
 fn color(r: Ray, world: &World, rng: &mut ThreadRng, depth: u32) -> Vec3 {
     if let Some(hit) = world.hit(&r, 0.001, std::f32::MAX) {
         if depth < MAX_DEPTH {
-            let scatter = match hit.material {
-                Material::Dielectric(d) => d.scatter(r, hit, rng),
-                Material::Lambertian(l) => l.scatter(r, hit, rng),
-                Material::Metal(m) => m.scatter(r, hit, rng),
-            };
+            let scatter = hit.material.scatter(r, hit, rng);
             return scatter.attenuation * color(scatter.ray, world, rng, depth + 1);
         } else {
             return Vec3::zeros();

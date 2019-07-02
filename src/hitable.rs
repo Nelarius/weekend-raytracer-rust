@@ -8,10 +8,6 @@ pub struct HitRecord<'obj> {
     pub material: &'obj Material,
 }
 
-pub trait Hitable {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
-}
-
 #[derive(Copy, Clone)]
 pub struct Sphere {
     pub center: Vec3,
@@ -27,11 +23,8 @@ impl Sphere {
             material,
         }
     }
-}
 
-// TODO: is this trait really needed? there is no generic code
-impl Hitable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
         let a = ray.direction.dot(ray.direction);
         let b = oc.dot(ray.direction);
@@ -73,10 +66,8 @@ impl World {
     pub fn new(spheres: Vec<Sphere>) -> World {
         World { spheres }
     }
-}
 
-impl Hitable for World {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut maybe_hit: Option<HitRecord> = None;
         for sphere in self.spheres.iter() {
