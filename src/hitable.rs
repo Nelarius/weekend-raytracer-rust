@@ -24,7 +24,7 @@ impl Sphere {
         }
     }
 
-    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord<'_>> {
         let oc = ray.origin - self.center;
         let a = ray.direction.dot(ray.direction);
         let b = oc.dot(ray.direction);
@@ -67,9 +67,9 @@ impl World {
         World { spheres }
     }
 
-    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord<'_>> {
         let mut closest_so_far = t_max;
-        let mut maybe_hit: Option<HitRecord> = None;
+        let mut maybe_hit: Option<HitRecord<'_>> = None;
         for sphere in self.spheres.iter() {
             if let Some(hit) = sphere.hit(&ray, t_min, t_max) {
                 closest_so_far = if hit.t < closest_so_far {

@@ -1,3 +1,10 @@
+#![deny(
+    clippy::pedantic,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style
+)]
+
 mod camera;
 mod hitable;
 mod material;

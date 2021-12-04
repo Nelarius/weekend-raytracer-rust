@@ -23,7 +23,7 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn scatter(self, _: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+    pub fn scatter(self, _: Ray, hit: HitRecord<'_>, rng: &mut ThreadRng) -> Scatter {
         let target = hit.p + hit.n + random_in_unit_sphere(rng);
         let attenuation = self.albedo;
         let scattered_ray = Ray::new(hit.p, target - hit.p);
@@ -38,7 +38,7 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+    pub fn scatter(self, ray: Ray, hit: HitRecord<'_>, rng: &mut ThreadRng) -> Scatter {
         let reflected = ray.direction.reflect(hit.n);
         let attenuation = self.albedo;
         let scattered = Ray::new(hit.p, reflected + self.fuzz * random_in_unit_sphere(rng));
@@ -72,7 +72,7 @@ fn schlick(cosine: f32, refraction_index: f32) -> f32 {
 }
 
 impl Dielectric {
-    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+    pub fn scatter(self, ray: Ray, hit: HitRecord<'_>, rng: &mut ThreadRng) -> Scatter {
         // if the ray direction and hit normal are in the same half-sphere
         let (outward_normal, ni_over_nt, cosine) = if ray.direction.dot(hit.n) > 0.0 {
             (
@@ -122,7 +122,7 @@ impl Material {
         return Material::Dielectric(Dielectric { refraction_index });
     }
 
-    pub fn scatter(self, ray: Ray, hit: HitRecord, rng: &mut ThreadRng) -> Scatter {
+    pub fn scatter(self, ray: Ray, hit: HitRecord<'_>, rng: &mut ThreadRng) -> Scatter {
         match hit.material {
             Material::Dielectric(d) => d.scatter(ray, hit, rng),
             Material::Lambertian(l) => l.scatter(ray, hit, rng),
